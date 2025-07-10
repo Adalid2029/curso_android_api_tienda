@@ -1,0 +1,146 @@
+<?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class ProductoModel extends Model
+{
+    protected $table            = 'productos';
+    protected $primaryKey       = 'id';
+    protected $useAutoIncrement = true;
+    protected $returnType       = 'array';
+    protected $useSoftDeletes   = false;
+    protected $protectFields    = true;
+    protected $allowedFields = [
+        'nombre',
+        'descripcion',
+        'precio',
+        'cantidad_stock',
+        'categoria_id',
+        'imagen_url',
+        'peso',
+        'dimensiones',
+        'marca',
+        'disponible',
+        'destacado',
+        'usuario_creador'
+    ];
+    protected bool $allowEmptyInserts = false;
+    protected bool $updateOnlyChanged = true;
+
+    protected array $casts = [];
+    protected array $castHandlers = [];
+
+    // Dates
+    protected $useTimestamps = false;
+    protected $dateFormat    = 'datetime';
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
+    protected $deletedField  = 'deleted_at';
+
+    // Validation
+    protected $validationRules = [
+        'nombre' => 'required|min_length[2]|max_length[200]',
+        'descripcion' => 'required|min_length[10]',
+        'precio' => 'required|decimal|greater_than[0]',
+        'cantidad_stock' => 'required|integer|greater_than_equal_to[0]',
+        'categoria_id' => 'required|integer|is_natural_no_zero',
+        'usuario_creador' => 'required|integer'
+    ];
+    protected $validationMessages = [
+        'nombre' => [
+            'required' => 'El nombre del producto es obligatorio',
+            'min_length' => 'El nombre debe tener al menos 2 caracteres'
+        ],
+        'precio' => [
+            'required' => 'El precio es obligatorio',
+            'greater_than' => 'El precio debe ser mayor a 0'
+        ]
+    ];
+    protected $skipValidation       = false;
+    protected $cleanValidationRules = true;
+
+    // Callbacks
+    protected $allowCallbacks = true;
+    protected $beforeInsert   = [];
+    protected $afterInsert    = [];
+    protected $beforeUpdate   = [];
+    protected $afterUpdate    = [];
+    protected $beforeFind     = [];
+    protected $afterFind      = [];
+    protected $beforeDelete   = [];
+    protected $afterDelete    = [];
+
+    /**
+     * Busca productos por término con información completa
+     */
+    public function buscarProductos($termino, $categoriaId = null)
+    {
+        $query = $this->select('productos.*, categorias.nombre as categoria_nombre, categorias.color as categoria_color')
+            ->join('categorias', 'categorias.id = productos.categoria_id')
+            ->where('productos.disponible', true)
+            ->where('categorias.estado', 'activo');
+
+        if ($termino) {
+            $query->groupStart()
+                ->like('productos.nombre', $termino)
+                ->orLike('productos.descripcion', $termino)
+                ->orLike('productos.marca', $termino)
+                ->groupEnd();
+        }
+
+        if ($categoriaId) {
+            $query->where('productos.categoria_id', $categoriaId);
+        }
+
+        return $query->orderBy('productos.nombre', 'ASC')->findAll();
+    }
+
+    /**
+     * Obtiene productos por categoría
+     */
+    public function obtenerProductosPorCategoria($categoriaId, $limit = null, $offset = 0)
+    {
+        $query = $this->select('productos.*, categorias.nombre as categoria_nombre')
+            ->join('categorias', 'categorias.id = productos.categoria_id')
+            ->where('productos.categoria_id', $categoriaId)
+            ->where('productos.disponible', true)
+            ->where('categorias.estado', 'activo')
+            ->orderBy('productos.nombre', 'ASC');
+
+        if ($limit) {
+            $query->limit($limit, $offset);
+        }
+
+        return $query->findAll();
+    }
+
+    /**
+     * Obtiene productos con información de categoría y creador
+     */
+    public function obtenerProductosConCategoria($limit = null, $offset = 0)
+    {
+        $query = $this->select('productos.*, categorias.nombre as categoria_nombre, categorias.color as categoria_color, users.username as creador_username, user_profiles.nombre_completo as creador_nombre')
+            ->join('categorias', 'categorias.id = productos.categoria_id')
+            ->join('users', 'users.id = productos.usuario_creador', 'left')
+            ->join('user_profiles', 'user_profiles.user_id = productos.usuario_creador', 'left')
+            ->where('productos.disponible', true)
+            ->where('categorias.estado', 'activo')
+            ->orderBy('productos.created_at', 'DESC');
+
+        if ($limit) {
+            $query->limit($limit, $offset);
+        }
+
+        return $query->findAll();
+    }
+    /**
+     * Verifica disponibilidad de stock
+     */
+    public function verificarStock($productoId, $cantidad)
+    {
+        $producto = $this->find($productoId);
+        return $producto && $producto['disponible'] && $producto['cantidad_stock'] >= $cantidad;
+    }
+}
