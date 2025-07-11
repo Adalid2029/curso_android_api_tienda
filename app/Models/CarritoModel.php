@@ -108,57 +108,19 @@ class CarritoModel extends Model
     }
 
     /**
-     * Calcula total del carrito
-     */
-    public function calcularTotalCarrito($userId)
-    {
-        $items = $this->obtenerCarritoUsuario($userId);
-        $subtotal = 0;
-        $totalItems = 0;
-
-        foreach ($items as $item) {
-            $subtotal += $item['cantidad'] * $item['precio_unitario'];
-            $totalItems += $item['cantidad'];
-        }
-
-        return [
-            'subtotal' => $subtotal,
-            'total_items' => $totalItems,
-            'items' => count($items)
-        ];
-    }
-
-    /**
-     * Verifica disponibilidad de todos los items del carrito
-     */
-    public function verificarDisponibilidadCarrito($userId)
-    {
-        $items = $this->obtenerCarritoUsuario($userId);
-        $itemsNoDisponibles = [];
-
-        foreach ($items as $item) {
-            if (!$item['disponible'] || $item['cantidad_stock'] < $item['cantidad']) {
-                $itemsNoDisponibles[] = [
-                    'item_id' => $item['id'],
-                    'producto_nombre' => $item['nombre'],
-                    'cantidad_solicitada' => $item['cantidad'],
-                    'stock_disponible' => $item['cantidad_stock'],
-                    'motivo' => !$item['disponible'] ? 'Producto no disponible' : 'Stock insuficiente'
-                ];
-            }
-        }
-
-        return $itemsNoDisponibles;
-    }
-
-    /**
      * Remover item específico del carrito
      */
     public function removerItem($itemId, $userId)
     {
-        return $this->where('id', $itemId)
+        $item = $this->where('id', $itemId)
             ->where('user_id', $userId)
-            ->delete();
+            ->first();
+
+        if ($item) {
+            return $this->delete($itemId);
+        }
+
+        return false;
     }
 
     /**
@@ -167,14 +129,6 @@ class CarritoModel extends Model
     public function vaciarCarrito($userId)
     {
         return $this->where('user_id', $userId)->delete();
-    }
-
-    /**
-     * Cuenta items en carrito
-     */
-    public function contarItemsCarrito($userId)
-    {
-        return $this->where('user_id', $userId)->countAllResults();
     }
 
     /**
@@ -189,5 +143,69 @@ class CarritoModel extends Model
             ->orderBy('veces_agregado', 'DESC')
             ->limit($limite)
             ->findAll();
+    }
+
+    /**
+     * Verificar disponibilidad de productos en el carrito
+     */
+    public function verificarDisponibilidadCarrito($userId)
+    {
+        $itemsCarrito = $this->obtenerCarritoUsuario($userId);
+        $itemsNoDisponibles = [];
+
+        foreach ($itemsCarrito as $item) {
+            $producto = model('ProductoModel')->find($item['producto_id']);
+
+            if (!$producto || !$producto['disponible']) {
+                $itemsNoDisponibles[] = [
+                    'item_id' => $item['id'],
+                    'producto_id' => $item['producto_id'],
+                    'nombre' => $item['nombre'],
+                    'razon' => 'Producto ya no disponible'
+                ];
+            } elseif ($producto['cantidad_stock'] < $item['cantidad']) {
+                $itemsNoDisponibles[] = [
+                    'item_id' => $item['id'],
+                    'producto_id' => $item['producto_id'],
+                    'nombre' => $item['nombre'],
+                    'cantidad_solicitada' => $item['cantidad'],
+                    'stock_disponible' => $producto['cantidad_stock'],
+                    'razon' => 'Stock insuficiente'
+                ];
+            }
+        }
+
+        return $itemsNoDisponibles;
+    }
+
+    /**
+     * Calcular totales del carrito
+     */
+    public function calcularTotalCarrito($userId)
+    {
+        $items = $this->obtenerCarritoUsuario($userId);
+        $subtotal = 0;
+        $totalItems = 0;
+
+        foreach ($items as $item) {
+            $subtotalItem = $item['cantidad'] * $item['precio_unitario'];
+            $subtotal += $subtotalItem;
+            $totalItems += $item['cantidad'];
+        }
+
+        return [
+            'subtotal' => $subtotal,
+            'total_items' => $totalItems,
+            'items' => count($items),
+            'productos' => $items
+        ];
+    }
+
+    /**
+     * Contar items en el carrito
+     */
+    public function contarItemsCarrito($userId)
+    {
+        return $this->where('user_id', $userId)->countAllResults();
     }
 }

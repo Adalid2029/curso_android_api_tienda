@@ -525,4 +525,13 @@ class Auth extends ShieldAuth
 
         return $final_url;
     }
+    /**
+     * JWT Configuration
+     */
+    public array $jwtKeys = [
+        'default' => [
+            'key' => 'tu-clave-secreta-muy-larga-aqui-minimo-32-caracteres-para-seguridad',
+            'alg' => 'HS256'
+        ]
+    ];
 }

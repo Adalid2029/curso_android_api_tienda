@@ -135,12 +135,68 @@ class ProductoModel extends Model
 
         return $query->findAll();
     }
+
     /**
-     * Verifica disponibilidad de stock
+     * Verificar si hay stock suficiente
      */
-    public function verificarStock($productoId, $cantidad)
+    public function verificarStock($productoId, $cantidadSolicitada)
     {
         $producto = $this->find($productoId);
-        return $producto && $producto['disponible'] && $producto['cantidad_stock'] >= $cantidad;
+
+        if (!$producto || !$producto['disponible']) {
+            return false;
+        }
+
+        return $producto['cantidad_stock'] >= $cantidadSolicitada;
+    }
+
+    /**
+     * Reducir stock de producto
+     */
+    public function reducirStock($productoId, $cantidad)
+    {
+        $producto = $this->find($productoId);
+
+        if (!$producto || $producto['cantidad_stock'] < $cantidad) {
+            return false;
+        }
+
+        $nuevoStock = $producto['cantidad_stock'] - $cantidad;
+
+        return $this->update($productoId, [
+            'cantidad_stock' => $nuevoStock
+        ]);
+    }
+
+    /**
+     * Aumentar stock de producto (para devoluciones/cancelaciones)
+     */
+    public function aumentarStock($productoId, $cantidad)
+    {
+        $producto = $this->find($productoId);
+
+        if (!$producto) {
+            return false;
+        }
+
+        $nuevoStock = $producto['cantidad_stock'] + $cantidad;
+
+        return $this->update($productoId, [
+            'cantidad_stock' => $nuevoStock
+        ]);
+    }
+
+    /**
+     * Obtener productos con stock bajo
+     */
+    public function obtenerProductosStockBajo($limite = 10)
+    {
+        return $this->select('productos.*, categorias.nombre as categoria_nombre')
+            ->join('categorias', 'categorias.id = productos.categoria_id')
+            ->where('productos.disponible', true)
+            ->where('productos.cantidad_stock <=', 10) // Stock crítico
+            ->orderBy('productos.cantidad_stock', 'ASC')
+            ->limit($limite)
+            ->findAll();
     }
 }

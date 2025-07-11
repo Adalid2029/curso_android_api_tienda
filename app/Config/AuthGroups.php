@@ -43,23 +43,19 @@ class AuthGroups extends ShieldAuthGroups
     public array $groups = [
         'superadmin' => [
             'title'       => 'Super Admin',
-            'description' => 'Complete control of the site.',
+            'description' => 'Acceso total al sistema',
         ],
         'admin' => [
-            'title'       => 'Admin',
-            'description' => 'Day to day administrators of the site.',
+            'title'       => 'Administrador',
+            'description' => 'Administrador de la tienda',
         ],
-        'developer' => [
-            'title'       => 'Developer',
-            'description' => 'Site programmers.',
+        'vendedor' => [
+            'title'       => 'Vendedor',
+            'description' => 'Personal de ventas',
         ],
-        'user' => [
-            'title'       => 'User',
-            'description' => 'General users of the site. Often customers.',
-        ],
-        'beta' => [
-            'title'       => 'Beta User',
-            'description' => 'Has access to beta-level features.',
+        'cliente' => [
+            'title'       => 'Cliente',
+            'description' => 'Cliente de la tienda',
         ],
     ];
 

@@ -18,6 +18,10 @@ class ProductosController extends BaseController
         $this->categoriaModel = new CategoriaModel();
     }
 
+    /*
+        * GET /api/v1/productos
+        * Listar productos con paginación y búsqueda
+        */
     public function index()
     {
         $limite = $this->request->getGet('limite') ?? 20;
@@ -55,12 +59,10 @@ class ProductosController extends BaseController
      */
     public function create()
     {
-        $auth = service('auth');
-        $user = $auth->user();
-
-        // if (!$user) {
-        //     return $this->respuestaError('Usuario no autenticado', 401);
-        // }
+        $user = $this->request->user;
+        if (!$user) {
+            return $this->respuestaError('Usuario no autenticado', 401);
+        }
 
         // Verificar permisos
         // if (!$user->can('products.create')) {
@@ -68,8 +70,8 @@ class ProductosController extends BaseController
         // }
 
         $datos = $this->request->getJSON(true);
-        // $datos['usuario_creador'] = $user->id;
-        $datos['usuario_creador'] = 1;
+        $datos['usuario_creador'] = $user->id;
+
         if (!$this->productoModel->validate($datos)) {
             return $this->respuestaError('Datos inválidos', 400, $this->productoModel->errors());
         }
@@ -94,12 +96,10 @@ class ProductosController extends BaseController
      */
     public function update($id = null)
     {
-        $auth = service('auth');
-        $user = $auth->user();
-
-        // if (!$user) {
-        //     return $this->respuestaError('Usuario no autenticado', 401);
-        // }
+        $user = $this->request->user;
+        if (!$user) {
+            return $this->respuestaError('Usuario no autenticado', 401);
+        }
 
         // if (!$user->can('products.edit')) {
         //     return $this->respuestaError('Sin permisos para editar productos', 403);
@@ -124,14 +124,16 @@ class ProductosController extends BaseController
         }
     }
 
+    /**
+     * DELETE /api/v1/productos/{id}
+     * Eliminar producto
+     */
     public function delete($id = null)
     {
-        $auth = service('auth');
-        $user = $auth->user();
-
-        // if (!$user) {
-        //     return $this->respuestaError('Usuario no autenticado', 401);
-        // }
+        $user = $this->request->user;
+        if (!$user) {
+            return $this->respuestaError('Usuario no autenticado', 401);
+        }
 
         // if (!$user->can('products.edit')) {
         //     return $this->respuestaError('Sin permisos para editar productos', 403);

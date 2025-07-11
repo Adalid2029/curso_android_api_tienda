@@ -25,19 +25,17 @@ class CarritoController extends BaseController
      */
     public function index()
     {
-        $auth = service('auth');
-        $user = $auth->user();
-        $userId = 1;
-        // if (!$user) {
-        //     return $this->respuestaError('Usuario no autenticado', 401);
-        // }
+        $user = $this->request->user;
+        if (!$user) {
+            return $this->respuestaError('Usuario no autenticado', 401);
+        }
 
         try {
-            $carrito = $this->carritoModel->obtenerCarritoUsuario($userId);
-            $totales = $this->carritoModel->calcularTotalCarrito($userId);
+            $carrito = $this->carritoModel->obtenerCarritoUsuario($user->id);
+            $totales = $this->carritoModel->calcularTotalCarrito($user->id);
 
             // Verificar disponibilidad de productos
-            $itemsNoDisponibles = $this->carritoModel->verificarDisponibilidadCarrito($userId);
+            $itemsNoDisponibles = $this->carritoModel->verificarDisponibilidadCarrito($user->id);
 
             return $this->respuestaExitosa([
                 'items' => $carrito,
@@ -57,12 +55,10 @@ class CarritoController extends BaseController
      */
     public function agregar()
     {
-        $auth = service('auth');
-        $user = $auth->user();
-        $userId = 1;
-        // if (!$user) {
-        //     return $this->respuestaError('Usuario no autenticado', 401);
-        // }
+        $user = $this->request->user;
+        if (!$user) {
+            return $this->respuestaError('Usuario no autenticado', 401);
+        }
 
         $rules = [
             'producto_id' => 'required|integer',
@@ -94,7 +90,7 @@ class CarritoController extends BaseController
 
             // Agregar al carrito
             $resultado = $this->carritoModel->agregarOActualizarProducto(
-                $userId,
+                $user->id,
                 $datos['producto_id'],
                 $datos['cantidad'],
                 $producto['precio']
@@ -105,7 +101,7 @@ class CarritoController extends BaseController
             }
 
             // Obtener totales actualizados
-            $totales = $this->carritoModel->calcularTotalCarrito($userId);
+            $totales = $this->carritoModel->calcularTotalCarrito($user->id);
 
             return $this->respuestaExitosa([
                 'totales' => $totales,
@@ -126,9 +122,7 @@ class CarritoController extends BaseController
      */
     public function actualizar($itemId = null)
     {
-        $auth = service('auth');
-        $user = $auth->user();
-
+        $user = $this->request->user;
         if (!$user) {
             return $this->respuestaError('Usuario no autenticado', 401);
         }
@@ -181,9 +175,7 @@ class CarritoController extends BaseController
      */
     public function remover($itemId = null)
     {
-        $auth = service('auth');
-        $user = $auth->user();
-
+        $user = $this->request->user;
         if (!$user) {
             return $this->respuestaError('Usuario no autenticado', 401);
         }
@@ -212,9 +204,7 @@ class CarritoController extends BaseController
      */
     public function vaciar()
     {
-        $auth = service('auth');
-        $user = $auth->user();
-
+        $user = $this->request->user;
         if (!$user) {
             return $this->respuestaError('Usuario no autenticado', 401);
         }
