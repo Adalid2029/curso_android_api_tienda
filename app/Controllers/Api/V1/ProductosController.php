@@ -34,10 +34,16 @@ class ProductosController extends BaseController
         try {
             if ($busqueda || $categoriaId) {
                 $productos = $this->productoModel->buscarProductos($busqueda, $categoriaId);
+
                 // Para búsquedas, aplicar paginación manual
                 $productos = array_slice($productos, $offset, $limite);
             } else {
                 $productos = $this->productoModel->obtenerProductosConCategoria($limite, $offset);
+            }
+            foreach ($productos as &$producto) {
+                if (!empty($producto['imagen_url'])) {
+                    $producto['imagen_url'] = base_url($producto['imagen_url']);
+                }
             }
 
             return $this->respuestaExitosa([
@@ -152,6 +158,45 @@ class ProductosController extends BaseController
             return $this->respuestaExitosa(null, 'Producto eliminado exitosamente');
         } catch (\Exception $e) {
             return $this->respuestaError('Error al eliminar producto: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function subirImagen($id = null)
+    {
+        $user = $this->request->user;
+        if (!$user) {
+            return $this->respuestaError('Usuario no autenticado', 401);
+        }
+
+        $producto = $this->productoModel->find($id);
+        if (!$producto) {
+            return $this->respuestaError('Producto no encontrado', 404);
+        }
+
+        $imagen = $this->request->getFile('imagen');
+
+        // Validar imagen
+        if (!$imagen || !$imagen->isValid() || $imagen->getSize() === 0) {
+            return $this->respuestaError('Imagen no válida', 400);
+        }
+
+        $tiposPermitidos = ['image/jpg', 'image/jpeg', 'image/png'];
+        if (!in_array($imagen->getMimeType(), $tiposPermitidos)) {
+            return $this->respuestaError('Tipo de imagen no permitido', 400);
+        }
+
+        try {
+            $ruta = $this->productoModel->subirImagen($id, $imagen);
+
+            if (!$ruta) {
+                return $this->respuestaError('Error al subir imagen', 500);
+            }
+
+            return $this->respuestaExitosa([
+                'imagen_url' => base_url($ruta)
+            ], 'Imagen subida exitosamente');
+        } catch (\Exception $e) {
+            return $this->respuestaError('Error al subir imagen: ' . $e->getMessage(), 500);
         }
     }
 }

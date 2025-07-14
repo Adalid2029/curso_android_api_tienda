@@ -199,4 +199,35 @@ class ProductoModel extends Model
             ->limit($limite)
             ->findAll();
     }
+
+    /*
+    * Subir imagen de producto
+     */
+    public function subirImagen($id, $imagen)
+    {
+        $producto = $this->find($id);
+        if (!$producto) {
+            return false;
+        }
+
+        // Crear carpeta si no existe
+        $carpetaDestino = FCPATH  . 'uploads/productos/' . $id;
+        if (!is_dir($carpetaDestino)) {
+            mkdir($carpetaDestino, 0777, true);
+        }
+
+        // Obtener nombre aleatorio
+        $nombreArchivo = $imagen->getRandomName();
+
+        // Mover imagen
+        if (!$imagen->move($carpetaDestino, $nombreArchivo)) {
+            return false;
+        }
+
+        // Guardar ruta relativa
+        $rutaRelativa = 'uploads/productos/' . $id . '/' . $nombreArchivo;
+        $this->update($id, ['imagen_url' => $rutaRelativa]);
+
+        return $rutaRelativa;
+    }
 }
