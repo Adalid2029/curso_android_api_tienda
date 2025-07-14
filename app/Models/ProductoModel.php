@@ -130,9 +130,8 @@ class ProductoModel extends Model
             ->orderBy('productos.created_at', 'DESC');
 
         if ($limit) {
-            $query->limit($limit, $offset);
+            $query->limit((int)$limit, (int)$offset);
         }
-
         return $query->findAll();
     }
 
