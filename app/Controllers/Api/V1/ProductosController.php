@@ -24,8 +24,8 @@ class ProductosController extends BaseController
         */
     public function index()
     {
-        $limite = $this->request->getGet('limite') ?? 20;
-        $pagina = $this->request->getGet('pagina') ?? 1;
+        $limite = $this->request->getGet('limite') ? (int) $this->request->getGet('limite') : 20;
+        $pagina = $this->request->getGet('pagina') ? (int) $this->request->getGet('pagina') : 1;
         $busqueda = $this->request->getGet('busqueda');
         $categoriaId = $this->request->getGet('categoria_id');
 
@@ -35,7 +35,6 @@ class ProductosController extends BaseController
             if ($busqueda || $categoriaId) {
                 $productos = $this->productoModel->buscarProductos($busqueda, $categoriaId);
 
-                // Para búsquedas, aplicar paginación manual
                 $productos = array_slice($productos, $offset, $limite);
             } else {
                 $productos = $this->productoModel->obtenerProductosConCategoria($limite, $offset);

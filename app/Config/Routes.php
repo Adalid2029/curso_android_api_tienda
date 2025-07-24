@@ -8,14 +8,13 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 
 $routes->group('api/v1', function ($routes) {
-
     $routes->post('auth/login', 'Api\V1\AuthController::login');
     $routes->post('auth/registro', 'Api\V1\AuthController::registro');
     $routes->post('auth/logout', 'Api\V1\AuthController::logout');
-    $routes->get('auth/perfil', 'Api\V1\AuthController::perfil');
-    $routes->put('auth/perfil', 'Api\V1\AuthController::actualizarPerfil');
-    $routes->post('auth/recuperar-contrasena', 'Api\V1\AuthController::recuperarContrasena');
-    $routes->post('auth/cambiar-contrasena', 'Api\V1\AuthController::cambiarContrasena');
+    $routes->get('auth/perfil', 'Api\V1\AuthController::perfil', ['filter' => 'jwt_auth']);
+    $routes->put('auth/perfil', 'Api\V1\AuthController::actualizarPerfil', ['filter' => 'jwt_auth']);
+    $routes->post('auth/recuperar-contrasena', 'Api\V1\AuthController::recuperarContrasena', ['filter' => 'jwt_auth']);
+    $routes->post('auth/cambiar-contrasena', 'Api\V1\AuthController::cambiarContrasena', ['filter' => 'jwt_auth']);
 
     $routes->get('productos', 'Api\V1\ProductosController::index');
     $routes->get('productos/(:num)', 'Api\V1\ProductosController::show/$1');

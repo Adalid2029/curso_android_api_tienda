@@ -94,7 +94,9 @@ class ProductoModel extends Model
             $query->where('productos.categoria_id', $categoriaId);
         }
 
-        return $query->orderBy('productos.nombre', 'ASC')->findAll();
+        $resultado = $query->orderBy('productos.nombre', 'ASC')->findAll();
+        log_message("info", $this->db->getLastQuery());
+        return $resultado;
     }
 
     /**
@@ -130,7 +132,7 @@ class ProductoModel extends Model
             ->orderBy('productos.created_at', 'DESC');
 
         if ($limit) {
-            $query->limit((int)$limit, (int)$offset);
+            $query->limit($limit, $offset);
         }
         return $query->findAll();
     }

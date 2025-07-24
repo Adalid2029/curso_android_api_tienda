@@ -243,8 +243,7 @@ class AuthController extends BaseController
      */
     public function cambiarContrasena()
     {
-        $jwtAuth = new \App\Libraries\JWTAuthenticator();
-        $user = $jwtAuth->requireAuth();
+        $user = $this->request->user;
 
         if (!$user) {
             return $this->respuestaError('Usuario no autenticado', 401);
@@ -262,10 +261,16 @@ class AuthController extends BaseController
 
         $data = $this->request->getJSON(true);
 
-        // Verificar contraseña actual
-        if (!$user->checkPassword($data['current_password'])) {
-            return $this->respuestaError('Contraseña actual incorrecta', 400);
-        }
+        // var_dump($user, $user->email);
+
+        $result = auth()->check([
+            'email'    => $user->email,
+            'password' => $data['current_password'],
+        ]);
+        if (!$result->isOK())
+            return $this->respond(['type' => 'error', 'message' => lang('ModuloSeguridad.responseUserSetupNewPasswordErrorOldPassword')]);
+        if ($data['current_password'] == $data['confirm_password'])
+            return $this->respond(['type' => 'error', 'message' => lang('ModuloSeguridad.responseUserSetupNewPasswordErrorSamePassword')]);
 
         // Actualizar contraseña
         $user->password = $data['new_password'];
