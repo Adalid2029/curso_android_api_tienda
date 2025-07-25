@@ -13,7 +13,9 @@ $routes->group('api/v1', function ($routes) {
     $routes->post('auth/logout', 'Api\V1\AuthController::logout');
     $routes->get('auth/perfil', 'Api\V1\AuthController::perfil', ['filter' => 'jwt_auth']);
     $routes->put('auth/perfil', 'Api\V1\AuthController::actualizarPerfil', ['filter' => 'jwt_auth']);
-    $routes->post('auth/recuperar-contrasena', 'Api\V1\AuthController::recuperarContrasena', ['filter' => 'jwt_auth']);
+    $routes->post('auth/recuperar-paso1', 'Api\V1\AuthController::recuperarPaso1');
+    $routes->post('auth/recuperar-paso2', 'Api\V1\AuthController::recuperarPaso2');
+    $routes->post('auth/recuperar-paso3', 'Api\V1\AuthController::recuperarPaso3');
     $routes->post('auth/cambiar-contrasena', 'Api\V1\AuthController::cambiarContrasena', ['filter' => 'jwt_auth']);
 
     $routes->get('productos', 'Api\V1\ProductosController::index');
